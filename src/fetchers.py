@@ -191,15 +191,20 @@ def fetch_broad_search(query: str, rapidapi_key: str) -> list:
             print(f'    JSearch HTTP {resp.status_code} for "{query}": {resp.text[:200]}')
             return []
         data = resp.json()
-        raw_items = data.get('data', [])
+        print(f'    JSearch top-level keys: {list(data.keys())}')
+        raw_data = data.get('data')
+        print(f'    JSearch data type: {type(raw_data).__name__}')
+        if isinstance(raw_data, dict):
+            print(f'    JSearch data keys: {list(raw_data.keys())}')
+            # Try common nested locations
+            raw_items = raw_data.get('jobs') or raw_data.get('results') or raw_data.get('job_postings') or []
+        elif isinstance(raw_data, list):
+            raw_items = raw_data
+        else:
+            raw_items = []
         print(f'    JSearch: {len(raw_items)} results')
-        # Log structure of first item once so we can verify field names
-        if raw_items:
-            first = raw_items[0]
-            if isinstance(first, dict):
-                print(f'    JSearch item keys: {list(first.keys())[:15]}')
-            else:
-                print(f'    JSearch item type: {type(first).__name__}, value: {str(first)[:200]}')
+        if raw_items and isinstance(raw_items[0], dict):
+            print(f'    JSearch item keys: {list(raw_items[0].keys())[:15]}')
     except Exception as e:
         print(f'    JSearch exception for "{query}": {type(e).__name__}: {str(e)[:200]}')
         return []
