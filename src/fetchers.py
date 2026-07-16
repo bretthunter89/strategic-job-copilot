@@ -177,19 +177,21 @@ def fetch_broad_search(query: str, adzuna_app_id: str, adzuna_app_key: str, page
             resp = requests.get(
                 f'https://api.adzuna.com/v1/api/jobs/us/search/{page}',
                 params={
-                    'app_id':          adzuna_app_id,
-                    'app_key':         adzuna_app_key,
-                    'what':            query,
+                    'app_id':           adzuna_app_id,
+                    'app_key':          adzuna_app_key,
+                    'what':             query,
                     'results_per_page': 20,
-                    'max_days_old':    30,
-                    'content-type':    'application/json',
+                    'max_days_old':     30,
                 },
+                headers={'Accept': 'application/json'},
                 timeout=30,
             )
-            resp.raise_for_status()
+            if not resp.ok:
+                print(f'    Adzuna HTTP {resp.status_code} for "{query}" page {page}: {resp.text[:200]}')
+                break
             data = resp.json()
         except Exception as e:
-            print(f'    Adzuna error for "{query}" page {page}: {e}')
+            print(f'    Adzuna exception for "{query}" page {page}: {type(e).__name__}: {str(e)[:200]}')
             break
 
         for item in data.get('results', []):
